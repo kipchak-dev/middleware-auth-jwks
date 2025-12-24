@@ -1,0 +1,35 @@
+{
+    "name": "kipchak/middleware-auth",
+    "type": "middleware",
+    "description": "The Official Auth Middleware for the Kipchak API Development Kit (ADK)",
+    "keywords": [
+        "APIs",
+        "HTTP",
+        "Microservices",
+        "Mamluk",
+        "AuthN",
+        "AuthZ",
+        "JWKS",
+        "API Keys"
+    ],
+    "homepage": "https://mamluk.net",
+    "license": "MIT",
+    "config": {
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "Kipchak\\Middleware\\Auth\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "guzzlehttp/guzzle": "^7.10",
+        "illuminate/http": "^12.40",
+        "kipchak/core": "2.x-dev",
+        "kipchak/driver-config": "dev-master",
+        "kipchak/driver-logger": "dev-master",
+        "kipchak/driver-filecache": "dev-master"
+    }
+}
