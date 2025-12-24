@@ -25,8 +25,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "guzzlehttp/guzzle": "^7.10",
-        "illuminate/http": "^12.40",
+        "firebase/php-jwt": "^6.9",
         "kipchak/core": "2.x-dev",
         "kipchak/driver-config": "dev-master",
         "kipchak/driver-logger": "dev-master",

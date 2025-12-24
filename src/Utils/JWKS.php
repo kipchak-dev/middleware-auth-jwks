@@ -1,0 +1,33 @@
+<?php
+
+namespace Kipchak\Middleware\Auth\Utils;
+
+use Firebase\JWT\JWK;
+use Firebase\JWT\JWT;
+
+class JWKS
+{
+    public static function decode(string $jwt, array $jwks): \stdClass
+    {
+        // Set leeway to allow for clock sync changes between client and server.
+        JWT::$leeway = 1;
+        
+        return JWT::decode($jwt,
+            JWK::parseKeySet($jwks)
+        );
+
+    }
+
+    public static function hasScopes(string $inToken, array $required): bool
+    {
+        $in = explode(' ', $inToken);
+        foreach ($in as $scope) {
+            // Return true even if 1 scope matches.
+            if (in_array($scope, $required)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}

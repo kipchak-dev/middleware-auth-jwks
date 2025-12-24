@@ -1,6 +1,6 @@
 <?php
 
-namespace Kipchak\Middleware\Auth\Handler;
+namespace Kipchak\Middleware\Auth\Handlers;
 
 use Kipchak\Core\Components\Http;
 use Kipchak\Driver\Filecache\Driver;
@@ -8,7 +8,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Response;
-use Kipchak\Core\Components\Auth\JWKS;
+use Kipchak\Middleware\Auth\Utils\JWKS;
 use Symfony\Contracts\Cache\ItemInterface;
 use Monolog\Logger as Log;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;

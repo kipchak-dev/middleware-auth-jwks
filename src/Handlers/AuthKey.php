@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Kipchak\Middleware\Auth\Handler;
+namespace Kipchak\Middleware\Auth\Handlers;
 
 use Kipchak\Core\Components\Http;
 use Psr\Container\ContainerInterface;
