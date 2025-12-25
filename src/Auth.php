@@ -8,7 +8,7 @@ use Kipchak\Middleware\Auth\Handlers\AuthJwks;
 use Kipchak\Middleware\Auth\Handlers\AuthKey;
 use Slim\App;
 
-class Middleware implements Interfaces\Middleware
+class Auth implements Interfaces\Middleware
 {
     public static function initialise(App $app): void
     {
