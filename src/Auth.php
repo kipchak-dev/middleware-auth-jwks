@@ -3,7 +3,7 @@
 namespace Kipchak\Middleware\Auth;
 
 use Kipchak\Core\Interfaces;
-use Kipchak\Driver\Config\Driver as Config;
+use Kipchak\Driver\Config\Config;
 use Kipchak\Middleware\Auth\Handlers\AuthJwks;
 use Kipchak\Middleware\Auth\Handlers\AuthKey;
 use Slim\App;

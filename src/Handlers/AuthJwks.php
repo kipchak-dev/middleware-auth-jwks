@@ -3,7 +3,7 @@
 namespace Kipchak\Middleware\Auth\Handlers;
 
 use Kipchak\Core\Components\Http;
-use Kipchak\Driver\Filecache\Driver;
+use Kipchak\Driver\Filecache\Filecache;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -13,8 +13,8 @@ use Symfony\Contracts\Cache\ItemInterface;
 use Monolog\Logger as Log;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Exception;
-use Kipchak\Driver\Config\Driver as Config;
-use Kipchak\Driver\Logger\Driver as Logger;
+use Kipchak\Driver\Config\Config;
+use Kipchak\Driver\Logger\Logger;
 
 class AuthJwks
 {

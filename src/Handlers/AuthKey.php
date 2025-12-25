@@ -8,7 +8,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Response;
-use Kipchak\Driver\Config\Driver as Config;
+use Kipchak\Driver\Config\Config;
 
 class AuthKey
 {

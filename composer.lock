@@ -209,11 +209,10 @@
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/core",
-                "reference": "7f284b7eb99339a7c9e079e916866766052caeb8"
+                "reference": "f89b0ac7143bd09cfcc1ec1f57b9b2c8d77f5e21"
             },
             "require": {
                 "cuyz/valinor": "^1.17",
-                "firebase/php-jwt": "^6.9",
                 "php": ">=8.4",
                 "php-di/php-di": "^7.1",
                 "slim/psr7": "^1.8",
@@ -239,7 +238,7 @@
                 "apis",
                 "microservices"
             ],
-            "time": "2025-12-24T10:34:23+00:00"
+            "time": "2025-12-25T09:09:00+00:00"
         },
         {
             "name": "kipchak/driver-config",
@@ -247,7 +246,7 @@
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/config",
-                "reference": "b3ff374495e99128905e4ce7ab0d9cb98ae105ae"
+                "reference": "20867eb0bdf56da07e60de8e52372a91f883c7f7"
             },
             "require": {
                 "kipchak/core": "2.x-dev"
@@ -272,7 +271,7 @@
                 "http",
                 "microservices"
             ],
-            "time": "2025-12-24T10:17:01+00:00"
+            "time": "2025-12-25T09:56:25+00:00"
         },
         {
             "name": "kipchak/driver-filecache",
@@ -280,7 +279,7 @@
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/filecache",
-                "reference": "87e2f4a1caefbfebc7d9f3d93783892439552e61"
+                "reference": "0bc5445d4163e57d9a0e0e0bc635c6f6e4e9a66b"
             },
             "require": {
                 "kipchak/core": "2.x-dev",
@@ -306,7 +305,7 @@
                 "http",
                 "microservices"
             ],
-            "time": "2025-12-24T10:18:08+00:00"
+            "time": "2025-12-25T10:13:46+00:00"
         },
         {
             "name": "kipchak/driver-logger",
@@ -314,7 +313,7 @@
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/logger",
-                "reference": "3b89685c3207f12503d447f5dd64a47d45d0e35d"
+                "reference": "110b161cfeb20ebe6bcf44220e8755ab7951e222"
             },
             "require": {
                 "kipchak/core": "2.x-dev",
@@ -341,7 +340,7 @@
                 "http",
                 "microservices"
             ],
-            "time": "2025-12-24T10:13:39+00:00"
+            "time": "2025-12-25T10:01:36+00:00"
         },
         {
             "name": "laravel/serializable-closure",
