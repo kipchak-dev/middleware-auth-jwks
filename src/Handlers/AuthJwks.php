@@ -29,7 +29,7 @@ class AuthJwks
     public function __construct(ContainerInterface $container, array $scopes = [])
     {
         $this->container = $container;
-        $this->cache = Driver::get();
+        $this->cache = Filecache::get();
         $this->log = Logger::get();
         $this->scopes = $scopes;
 
