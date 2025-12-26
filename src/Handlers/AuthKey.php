@@ -36,17 +36,20 @@ class AuthKey
         $response = new Response();
 
         if (
-            (isset($authConfig['jwks']['ignore_options']) && $request->getMethod() === 'OPTIONS' && $authConfig['jwks']['ignore_options']) ||
-            (isset($authConfig['jwks']['ignore_paths']) && in_array($request->getUri()->getPath(), $authConfig['jwks']['ignore_paths']))
+            (isset($authConfig['key']['ignore_options']) && $request->getMethod() === 'OPTIONS' && $authConfig['key']['ignore_options']) ||
+            (isset($authConfig['key']['ignore_paths']) && in_array($request->getUri()->getPath(), $authConfig['key']['ignore_paths']))
         ) {
             $response = $handler->handle($request);
 
             return $response;
         }
 
-        $key = isset($request->getHeader('apikey')[0]) ?
+        $headerToCheck = $authConfig['key']['header'];
+        $queryParamToCheck = $authConfig['key']['query_param'];
+
+        $key = isset($request->getHeader($headerToCheck)[0]) ?
             $request->getHeader('apikey')[0] :
-            Http\Request::getQueryParam($request, 'apikey');
+            Http\Request::getQueryParam($request, $queryParamToCheck );
 
         if (isset($authConfig['key']['authorised_keys'][$key])) {
             // Key matched!
