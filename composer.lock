@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "294a146f1729cff7400b93f389fa2e64",
+    "content-hash": "c1f26c2a1d282f0652a2530e3d561544",
     "packages": [
         {
             "name": "cuyz/valinor",
@@ -142,16 +142,16 @@
         },
         {
             "name": "firebase/php-jwt",
-            "version": "v6.11.1",
+            "version": "v7.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/firebase/php-jwt.git",
-                "reference": "d1e91ecf8c598d073d0995afa8cd5c75c6e19e66"
+                "reference": "5645b43af647b6947daac1d0f659dd1fbe8d3b65"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/firebase/php-jwt/zipball/d1e91ecf8c598d073d0995afa8cd5c75c6e19e66",
-                "reference": "d1e91ecf8c598d073d0995afa8cd5c75c6e19e66",
+                "url": "https://api.github.com/repos/firebase/php-jwt/zipball/5645b43af647b6947daac1d0f659dd1fbe8d3b65",
+                "reference": "5645b43af647b6947daac1d0f659dd1fbe8d3b65",
                 "shasum": ""
             },
             "require": {
@@ -199,9 +199,9 @@
             ],
             "support": {
                 "issues": "https://github.com/firebase/php-jwt/issues",
-                "source": "https://github.com/firebase/php-jwt/tree/v6.11.1"
+                "source": "https://github.com/firebase/php-jwt/tree/v7.0.2"
             },
-            "time": "2025-04-09T20:32:01+00:00"
+            "time": "2025-12-16T22:17:28+00:00"
         },
         {
             "name": "kipchak/core",
@@ -209,7 +209,7 @@
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/core",
-                "reference": "f89b0ac7143bd09cfcc1ec1f57b9b2c8d77f5e21"
+                "reference": "8ea34fa8ce593f705a63faca4fd5eee82259198d"
             },
             "require": {
                 "cuyz/valinor": "^1.17",
@@ -238,7 +238,7 @@
                 "apis",
                 "microservices"
             ],
-            "time": "2025-12-25T09:09:00+00:00"
+            "time": "2025-12-25T10:26:38+00:00"
         },
         {
             "name": "kipchak/driver-config",
@@ -279,7 +279,7 @@
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/filecache",
-                "reference": "0bc5445d4163e57d9a0e0e0bc635c6f6e4e9a66b"
+                "reference": "250bb1870daaabbeae5ac2a2135f6a955b0da544"
             },
             "require": {
                 "kipchak/core": "2.x-dev",
@@ -305,7 +305,7 @@
                 "http",
                 "microservices"
             ],
-            "time": "2025-12-25T10:13:46+00:00"
+            "time": "2025-12-25T10:24:01+00:00"
         },
         {
             "name": "kipchak/driver-logger",
