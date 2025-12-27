@@ -22,9 +22,9 @@
     "prefer-stable": true,
     "require": {
         "firebase/php-jwt": "^7",
-        "kipchak/core": "2.x-dev",
-        "kipchak/driver-config": "dev-master",
-        "kipchak/driver-logger": "dev-master",
-        "kipchak/driver-filecache": "dev-master"
+        "kipchak/core": "^2",
+        "kipchak/driver-config": "^1",
+        "kipchak/driver-logger": "^1",
+        "kipchak/driver-filecache": "^1"
     }
 }

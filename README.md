@@ -1,51 +1,23 @@
-# HTTP Driver for Kipchak
+# JWKS Middleware for Kipchak
 
-This driver is an HTTP client based on the illuminate/http package that ships with Laravel.
+This Middleware package provides OAuth 2.0 JWT Bearer Token Authentication support for Kipchak APIs using JWKS.
 
-It is used to make HTTP requests within Kipchak.
+#### Composer Package
 
-#### Composer Package 
-
-`kipchak/driver-http`
-
-#### Sample Config File:
-
-This driver does not require any configuration.
+`kipchak/middleware-auth-jwks`
 
 ## How to use it?
 
-Install it via composer: `composer require kipchak/driver-http`.
+Install it via composer: `composer require kipchak/middleware-auth-jwks`.
 
-### Example Usage
+Then just ensure you have appropriate settings configured in `kipchak.auth.jwks.php` config file in the root of your project.
 
-```php
-// Load the HTTP driver.
-$http = \Mamluk\Kipchak\Driver\Http\Driver::get()
-// Use the HTTP client ($http) client as you normally would.
-```
-See the methods available in the client here: https://laravel.com/docs/12.x/http-client. All methods
-in the Laravel documentation called via `Http::method()` are available via `$http->method() in Kipchak.
+For a sample, please see: https://1x.ax/mamluk/kipchak/starter/~files/master/config/kipchak.auth.jwks.php.
 
-## What is a Kipchak Driver?
+## What is a Kipchak Middleware?
 
-Kipchak Drivers are used to connect Kipchak to various data sources or storage systems. 
+Kipchak Middleware is a standard PHP PSR-15 middleware.
 
-They provide a standardized interface for interacting with different data sources, allowing developers to 
-focus on building their applications rather than dealing with the complexities of each data source.
-
-Drivers were introduced as a part of the Kipchak 2.0 release.
-
-Drivers are basically Container Dependencies injected into Kipchak's Service Container.
-
-## How do Kipchak Drivers work?
-
-Kipchak drivers are wired into the Service Container via a config file (where required).
-
-Each driver defines an implementation of Kipchak's Driver Interface. 
-Where applicable, the dependency may accept a parameter for a specific instance of the driver specified as a onfig property, 
-for instance, in the case of multiple database connections or S3 buckets.
-
-So you may access the driver by invoking \Mamluk\Kipchak\Driver\Http\Driver::get('default'), where 
-`default` is the name of the connection specified in the config file.
-
-**NOTE: This driver does not require any configuration.**
+Middleware is a component that sits between the request and response of a web application, allowing for interception
+and modification of the request and response data. In the context of Kipchak, middleware can be used to handle errors,
+authentication, and other cross-cutting concerns that are common across one or more API endpoints.
