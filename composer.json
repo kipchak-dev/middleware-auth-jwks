@@ -1,16 +1,12 @@
 {
-    "name": "kipchak/middleware-auth",
+    "name": "kipchak/middleware-auth-jwks",
     "type": "middleware",
-    "description": "The Official Auth Middleware for the Kipchak API Development Kit (ADK)",
+    "description": "The Official JWKS Auth Middleware for the Kipchak API Development Kit (ADK)",
     "keywords": [
         "APIs",
         "HTTP",
         "Microservices",
-        "Mamluk",
-        "AuthN",
-        "AuthZ",
-        "JWKS",
-        "API Keys"
+        "Mamluk"
     ],
     "homepage": "https://mamluk.net",
     "license": "MIT",
@@ -19,7 +15,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Kipchak\\Middleware\\Auth\\": "src/"
+            "Kipchak\\Middleware\\Auth\\JWKS\\": "src/"
         }
     },
     "minimum-stability": "dev",

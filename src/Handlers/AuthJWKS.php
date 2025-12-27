@@ -1,6 +1,6 @@
 <?php
 
-namespace Kipchak\Middleware\Auth\Handlers;
+namespace Kipchak\Middleware\Auth\JWKS\Handlers;
 
 use Kipchak\Core\Components\Http;
 use Kipchak\Driver\Filecache\Filecache;
@@ -8,7 +8,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Response;
-use Kipchak\Middleware\Auth\Utils\JWKS;
+use Kipchak\Middleware\Auth\JWKS\Utils\JWKS;
 use Symfony\Contracts\Cache\ItemInterface;
 use Monolog\Logger as Log;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
@@ -16,7 +16,7 @@ use Exception;
 use Kipchak\Driver\Config\Config;
 use Kipchak\Driver\Logger\Logger;
 
-class AuthJwks
+class AuthJWKS
 {
     public ContainerInterface $container;
 
@@ -45,16 +45,14 @@ class AuthJwks
      */
     public function __invoke(ServerRequestInterface $request, RequestHandlerInterface $handler): Response
     {
-        $authConfig = Config::get('kipchak.auth');
+        $authConfig = Config::get('kipchak.auth.jwks');
         $response = new Response();
 
         if (
-            (isset($authConfig['jwks']['ignore_options']) && $request->getMethod() === 'OPTIONS' && $authConfig['jwks']['ignore_options']) ||
-            (isset($authConfig['jwks']['ignore_paths']) && in_array($request->getUri()->getPath(), $authConfig['jwks']['ignore_paths']))
+            (isset($authConfig['ignore_options']) && $request->getMethod() === 'OPTIONS' && $authConfig['ignore_options']) ||
+            (isset($authConfig['ignore_paths']) && in_array($request->getUri()->getPath(), $authConfig['ignore_paths']))
         ) {
-            $response = $handler->handle($request);
-
-            return $response;
+            return $handler->handle($request);
         }
 
 
@@ -72,16 +70,14 @@ class AuthJwks
                     // Bearer token found
                     $jwt = $matches[1];
                     // The URI for the JWKS you wish to cache the results from
-                    $jwksUri = $authConfig['jwks']['jwksUri'];
+                    $jwksUri = $authConfig['jwksUri'];
 
                     $this->log->debug('Using a cache contract to get the JWKS key...');
 
                     $jwks = $this->cache->get('jwks', function (ItemInterface $item) use ($jwksUri) {
                         $item->expiresAfter(86400);
                         $this->log->debug('Cache miss. Getting JWKS key from the URL');
-                        $jwks = json_decode(file_get_contents($jwksUri), true);
-
-                        return $jwks;
+                        return json_decode(file_get_contents($jwksUri), true);
                     });
 
                     $token = JWKS::decode($jwt, $jwks);
@@ -103,8 +99,8 @@ class AuthJwks
 
                     // If config says validate scopes and no scopes are passed to the MW, use the default ones
                     if (empty($this->scopes)) {
-                        if ($authConfig['jwks']['validate_scopes']) {
-                            if (!JWKS::hasScopes($token->scope, $authConfig['jwks']['scopes'])) {
+                        if ($authConfig['validate_scopes']) {
+                            if (!JWKS::hasScopes($token->scope, $authConfig['scopes'])) {
                                 return Http\Response::json($response,
                                     'Missing required scope(s)',
                                     401
@@ -127,10 +123,7 @@ class AuthJwks
                     });
 
                     // If we got this far, we can let the token through
-                    $response = $handler->handle($request);
-
-                    return $response;
-
+                    return $handler->handle($request);
                 } catch (Exception $e) {
                     return Http\Response::json($response,
                         $e->getMessage(),

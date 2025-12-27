@@ -1,6 +1,6 @@
 <?php
 
-namespace Kipchak\Middleware\Auth\Utils;
+namespace Kipchak\Middleware\Auth\JWKS\Utils;
 
 use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
