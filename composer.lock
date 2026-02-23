@@ -205,11 +205,11 @@
         },
         {
             "name": "kipchak/core",
-            "version": "2.12",
+            "version": "2.13",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/core",
-                "reference": "bad25e05e254dd063167b5f22043c8dd607e2cdb"
+                "reference": "a814d42f54c41c26fc9596d881cc36f7ffc65942"
             },
             "require": {
                 "cuyz/valinor": "^1.17",
@@ -238,7 +238,7 @@
                 "apis",
                 "microservices"
             ],
-            "time": "2026-02-16T11:12:22+00:00"
+            "time": "2026-02-23T07:22:39+00:00"
         },
         {
             "name": "kipchak/driver-config",
@@ -307,11 +307,11 @@
         },
         {
             "name": "kipchak/driver-logger",
-            "version": "1.8",
+            "version": "1.9",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/logger",
-                "reference": "763a486f4c00a5d493be0b41df59af4b54ce3ba5"
+                "reference": "4637bd4c31a375d3528b3dff19c79fe92c3794b7"
             },
             "require": {
                 "kipchak/core": "^2",
@@ -337,7 +337,7 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-02-16T11:18:20+00:00"
+            "time": "2026-02-23T07:22:56+00:00"
         },
         {
             "name": "laravel/serializable-closure",
