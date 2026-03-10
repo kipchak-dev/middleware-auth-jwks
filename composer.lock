@@ -274,11 +274,11 @@
         },
         {
             "name": "kipchak/driver-filecache",
-            "version": "1.8",
+            "version": "1.9",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/filecache",
-                "reference": "10c10b6a6c4a19ee22c9dc0bedbddbcb48e015df"
+                "reference": "b973285fe7914f407668933a9d1b5a7b11c79dc9"
             },
             "require": {
                 "kipchak/core": "^2",
@@ -303,15 +303,15 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-03-02T07:39:10+00:00"
+            "time": "2026-03-10T08:39:16+00:00"
         },
         {
             "name": "kipchak/driver-logger",
-            "version": "1.11",
+            "version": "1.12",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/logger",
-                "reference": "f84667a2a225cb0754801c574a7658191d16141e"
+                "reference": "c2922cab1ba7f5bbab992b7a578fe909c2915f7f"
             },
             "require": {
                 "kipchak/core": "^2",
@@ -337,7 +337,7 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-03-02T07:38:59+00:00"
+            "time": "2026-03-10T08:39:04+00:00"
         },
         {
             "name": "laravel/serializable-closure",
@@ -1451,16 +1451,16 @@
         },
         {
             "name": "symfony/cache",
-            "version": "v8.0.6",
+            "version": "v8.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/cache.git",
-                "reference": "59184fa14658d7724cd9b8743d91c1b1aa618bff"
+                "reference": "b7b0f4ce5fb57a8dc061d494639e44e2cf7aa30f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/cache/zipball/59184fa14658d7724cd9b8743d91c1b1aa618bff",
-                "reference": "59184fa14658d7724cd9b8743d91c1b1aa618bff",
+                "url": "https://api.github.com/repos/symfony/cache/zipball/b7b0f4ce5fb57a8dc061d494639e44e2cf7aa30f",
+                "reference": "b7b0f4ce5fb57a8dc061d494639e44e2cf7aa30f",
                 "shasum": ""
             },
             "require": {
@@ -1527,7 +1527,7 @@
                 "psr6"
             ],
             "support": {
-                "source": "https://github.com/symfony/cache/tree/v8.0.6"
+                "source": "https://github.com/symfony/cache/tree/v8.0.7"
             },
             "funding": [
                 {
@@ -1547,7 +1547,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-02-21T23:29:37+00:00"
+            "time": "2026-03-06T13:17:40+00:00"
         },
         {
             "name": "symfony/cache-contracts",
