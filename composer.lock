@@ -142,16 +142,16 @@
         },
         {
             "name": "firebase/php-jwt",
-            "version": "v7.0.3",
+            "version": "v7.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/firebase/php-jwt.git",
-                "reference": "28aa0694bcfdfa5e2959c394d5a1ee7a5083629e"
+                "reference": "e41f1bd7dbe3c5455c3f72d4338cfeb083b71931"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/firebase/php-jwt/zipball/28aa0694bcfdfa5e2959c394d5a1ee7a5083629e",
-                "reference": "28aa0694bcfdfa5e2959c394d5a1ee7a5083629e",
+                "url": "https://api.github.com/repos/firebase/php-jwt/zipball/e41f1bd7dbe3c5455c3f72d4338cfeb083b71931",
+                "reference": "e41f1bd7dbe3c5455c3f72d4338cfeb083b71931",
                 "shasum": ""
             },
             "require": {
@@ -159,6 +159,7 @@
             },
             "require-dev": {
                 "guzzlehttp/guzzle": "^7.4",
+                "phpfastcache/phpfastcache": "^9.2",
                 "phpspec/prophecy-phpunit": "^2.0",
                 "phpunit/phpunit": "^9.5",
                 "psr/cache": "^2.0||^3.0",
@@ -199,17 +200,17 @@
             ],
             "support": {
                 "issues": "https://github.com/firebase/php-jwt/issues",
-                "source": "https://github.com/firebase/php-jwt/tree/v7.0.3"
+                "source": "https://github.com/firebase/php-jwt/tree/v7.0.4"
             },
-            "time": "2026-02-25T22:16:40+00:00"
+            "time": "2026-03-27T21:17:19+00:00"
         },
         {
             "name": "kipchak/core",
-            "version": "2.15",
+            "version": "2.16",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/core",
-                "reference": "741762d0fa82cbb7000234bb0d093ad98324a8bc"
+                "reference": "7f8f8bbb7ecfbed2d25eea42ef3e32279344d194"
             },
             "require": {
                 "cuyz/valinor": "^1.17",
@@ -238,15 +239,15 @@
                 "apis",
                 "microservices"
             ],
-            "time": "2026-03-15T07:35:09+00:00"
+            "time": "2026-03-31T14:14:36+00:00"
         },
         {
             "name": "kipchak/driver-config",
-            "version": "1.11",
+            "version": "1.12",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/config",
-                "reference": "2c81495337dc8ff76cffcb73050459ccf6cecac6"
+                "reference": "7538977c010ae1f02bc3c8f740214ca0928a97f5"
             },
             "require": {
                 "kipchak/core": "^2"
@@ -270,15 +271,15 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-03-02T07:38:49+00:00"
+            "time": "2026-03-31T14:14:50+00:00"
         },
         {
             "name": "kipchak/driver-filecache",
-            "version": "1.10",
+            "version": "1.11",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/filecache",
-                "reference": "a0c507a90155c6d889b1fe598555b13c9b5aac3f"
+                "reference": "fa2367e7fc0dbdfd79182e02a9be8d3f273bf840"
             },
             "require": {
                 "kipchak/core": "^2",
@@ -303,15 +304,15 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-03-15T07:35:40+00:00"
+            "time": "2026-03-31T14:15:12+00:00"
         },
         {
             "name": "kipchak/driver-logger",
-            "version": "1.13",
+            "version": "1.14",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/logger",
-                "reference": "07273276a5a195a83d559c798e7599dc1bfcb634"
+                "reference": "f820642e9cee7e5fb857a4fa29c4bc009bed8a15"
             },
             "require": {
                 "kipchak/core": "^2",
@@ -337,7 +338,7 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-03-15T07:35:28+00:00"
+            "time": "2026-03-31T14:15:01+00:00"
         },
         {
             "name": "laravel/serializable-closure",
