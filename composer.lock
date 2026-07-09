@@ -208,11 +208,11 @@
         },
         {
             "name": "kipchak/core",
-            "version": "2.21",
+            "version": "2.22",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/core",
-                "reference": "ecdc4d4cd3127ce5b5d327b3fb00988ffaa41c79"
+                "reference": "4334b2a8bc9a2497473fbc70f7a40e9e9e1c6ad7"
             },
             "require": {
                 "cuyz/valinor": "^1.17",
@@ -241,15 +241,15 @@
                 "apis",
                 "microservices"
             ],
-            "time": "2026-07-01T09:00:21+00:00"
+            "time": "2026-07-09T11:35:03+00:00"
         },
         {
             "name": "kipchak/driver-config",
-            "version": "1.17",
+            "version": "1.18",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/config",
-                "reference": "200d0692e62242d5a000ad8da3d3a26371c3f97c"
+                "reference": "cbd01b99bf3b2bb3b78ec49cb421e18046164ecd"
             },
             "require": {
                 "kipchak/core": "^2"
@@ -273,15 +273,15 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-07-01T09:00:38+00:00"
+            "time": "2026-07-09T11:35:19+00:00"
         },
         {
             "name": "kipchak/driver-filecache",
-            "version": "1.16",
+            "version": "1.17",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/filecache",
-                "reference": "2eaacb60835a457048818cb8940ce4fea615be5d"
+                "reference": "58cdc9f19300aac5c883c4c6baacd1dea9417228"
             },
             "require": {
                 "kipchak/core": "^2",
@@ -306,15 +306,15 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-07-01T09:01:07+00:00"
+            "time": "2026-07-09T11:35:51+00:00"
         },
         {
             "name": "kipchak/driver-logger",
-            "version": "1.22",
+            "version": "1.23",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/logger",
-                "reference": "a94bc1540de9d55fb4bca142802e575f6b290d45"
+                "reference": "5b224b1df5133e7e6d2c0208ea8caa03f7775aee"
             },
             "require": {
                 "kipchak/core": "^2",
@@ -340,7 +340,7 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-07-01T09:00:52+00:00"
+            "time": "2026-07-09T11:35:38+00:00"
         },
         {
             "name": "laravel/serializable-closure",
@@ -558,20 +558,19 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.7.0",
+            "version": "v5.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "dca41cd15c2ac9d055ad70dbfd011130757d1f82"
+                "reference": "044a6a392ff8ad0d61f14370a5fbbd0a0107152f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/dca41cd15c2ac9d055ad70dbfd011130757d1f82",
-                "reference": "dca41cd15c2ac9d055ad70dbfd011130757d1f82",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/044a6a392ff8ad0d61f14370a5fbbd0a0107152f",
+                "reference": "044a6a392ff8ad0d61f14370a5fbbd0a0107152f",
                 "shasum": ""
             },
             "require": {
-                "ext-ctype": "*",
                 "ext-json": "*",
                 "ext-tokenizer": "*",
                 "php": ">=7.4"
@@ -610,9 +609,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.7.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.8.0"
             },
-            "time": "2025-12-06T11:56:16+00:00"
+            "time": "2026-07-04T14:30:18+00:00"
         },
         {
             "name": "php-di/invoker",
@@ -744,16 +743,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "2.3.2",
+            "version": "2.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "a004701b11273a26cd7955a61d67a7f1e525a45a"
+                "reference": "fb19eedd2bb67ff8cf7a5502ad329e701d6398a3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/a004701b11273a26cd7955a61d67a7f1e525a45a",
-                "reference": "a004701b11273a26cd7955a61d67a7f1e525a45a",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/fb19eedd2bb67ff8cf7a5502ad329e701d6398a3",
+                "reference": "fb19eedd2bb67ff8cf7a5502ad329e701d6398a3",
                 "shasum": ""
             },
             "require": {
@@ -785,9 +784,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/2.3.2"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/2.3.3"
             },
-            "time": "2026-01-25T14:56:51+00:00"
+            "time": "2026-07-08T07:01:06+00:00"
         },
         {
             "name": "psr/cache",
