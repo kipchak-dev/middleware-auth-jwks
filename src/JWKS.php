@@ -4,7 +4,7 @@ namespace Kipchak\Middleware\Auth\JWKS;
 
 use Kipchak\Core\Interfaces;
 use Kipchak\Driver\Config\Config;
-use Kipchak\Middleware\Auth\JWKS\Handlers\AuthJwks;
+use Kipchak\Middleware\Auth\JWKS\Handlers\AuthJWKS;
 use Kipchak\Core\Components\App;
 
 class JWKS implements Interfaces\Middleware
