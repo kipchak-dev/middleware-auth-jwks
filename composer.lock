@@ -210,11 +210,11 @@
         },
         {
             "name": "kipchak/core",
-            "version": "3.3",
+            "version": "3.4",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/core",
-                "reference": "675a330e94829b596d652cf4913c2f223da4cf9f"
+                "reference": "1ae090dea7824149a985265add5029ec4afa5569"
             },
             "require": {
                 "cuyz/valinor": "^2",
@@ -243,15 +243,15 @@
                 "apis",
                 "microservices"
             ],
-            "time": "2026-08-04T06:19:57+00:00"
+            "time": "2026-08-06T10:02:25+00:00"
         },
         {
             "name": "kipchak/driver-config",
-            "version": "1.21",
+            "version": "1.22",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/config",
-                "reference": "40963bdc3e4f5c79a5d2a8a97727b228ce7975cc"
+                "reference": "a173f3df0c6737a1e09817277a62936f0464ebd0"
             },
             "require": {
                 "kipchak/core": "^2 || ^3"
@@ -275,15 +275,15 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-08-04T06:20:17+00:00"
+            "time": "2026-08-06T10:02:47+00:00"
         },
         {
             "name": "kipchak/driver-filecache",
-            "version": "1.20",
+            "version": "1.21",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/filecache",
-                "reference": "c6fc5ddb8bf387bd6a7dac29e5006fabeda664fe"
+                "reference": "702c364239bb8b825e6b9ec679f3020f380fe4a8"
             },
             "require": {
                 "kipchak/core": "^2 || ^3",
@@ -308,15 +308,15 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-08-04T06:20:55+00:00"
+            "time": "2026-08-06T10:03:23+00:00"
         },
         {
             "name": "kipchak/driver-logger",
-            "version": "1.26",
+            "version": "1.27",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/logger",
-                "reference": "e2783f7d99e128b3a45c101cc3ead422b6ce8ef8"
+                "reference": "ff7543e641a0637c43ac127e70413b8c108c8b5b"
             },
             "require": {
                 "kipchak/core": "^2 || ^3",
@@ -342,7 +342,7 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-08-04T06:20:36+00:00"
+            "time": "2026-08-06T10:03:05+00:00"
         },
         {
             "name": "laravel/serializable-closure",
@@ -2804,16 +2804,16 @@
         },
         {
             "name": "zircote/swagger-php",
-            "version": "6.5.1",
+            "version": "6.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/zircote/swagger-php.git",
-                "reference": "791f8b2e88b78bd71c57d4de923e6d1cadfdae03"
+                "reference": "cec9ec9157513ba27f15513d4983acbe03ce10b8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/zircote/swagger-php/zipball/791f8b2e88b78bd71c57d4de923e6d1cadfdae03",
-                "reference": "791f8b2e88b78bd71c57d4de923e6d1cadfdae03",
+                "url": "https://api.github.com/repos/zircote/swagger-php/zipball/cec9ec9157513ba27f15513d4983acbe03ce10b8",
+                "reference": "cec9ec9157513ba27f15513d4983acbe03ce10b8",
                 "shasum": ""
             },
             "require": {
@@ -2832,10 +2832,10 @@
             },
             "require-dev": {
                 "doctrine/annotations": "^2.0",
-                "friendsofphp/php-cs-fixer": "^3.62.0",
-                "phpstan/phpstan": "2.2.5",
+                "friendsofphp/php-cs-fixer": "^3.62",
+                "phpstan/phpstan": "^2.2",
                 "phpunit/phpunit": "^11.5 || >=12.5.22",
-                "rector/rector": "^2.3.1"
+                "rector/rector": "^2.3"
             },
             "bin": [
                 "bin/openapi"
@@ -2881,7 +2881,7 @@
             ],
             "support": {
                 "issues": "https://github.com/zircote/swagger-php/issues",
-                "source": "https://github.com/zircote/swagger-php/tree/6.5.1"
+                "source": "https://github.com/zircote/swagger-php/tree/6.5.2"
             },
             "funding": [
                 {
@@ -2889,7 +2889,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-07-30T04:11:06+00:00"
+            "time": "2026-08-05T02:31:32+00:00"
         }
     ],
     "packages-dev": [],
