@@ -18,6 +18,12 @@ use Kipchak\Driver\Logger\Logger;
 
 class AuthJWKS
 {
+    /**
+     * The verified token (the decoded claims, as a \stdClass) on every request this middleware lets through.
+     * Read it with $request->getAttribute(AuthJWKS::ATTRIBUTE_TOKEN). Requests on ignored paths do not carry it.
+     */
+    public const ATTRIBUTE_TOKEN = 'kipchak.auth.token';
+
     public ContainerInterface $container;
 
     private Log $log;
@@ -99,8 +105,8 @@ class AuthJWKS
 
                     // If config says validate scopes and no scopes are passed to the MW, use the default ones
                     if (empty($this->scopes)) {
-                        if ($authConfig['validate_scopes']) {
-                            if (!JWKS::hasScopes($token->scope, $authConfig['scopes'])) {
+                        if ($authConfig['validate_scopes'] ?? false) {
+                            if (!JWKS::hasScopes((string) ($token->scope ?? ''), $authConfig['scopes'] ?? [])) {
                                 return Http\Response::json($response,
                                     'Missing required scope(s)',
                                     401
@@ -109,7 +115,7 @@ class AuthJWKS
                         }
                     } else {
                         // Custom scopes have been passed, validate those
-                        if (!JWKS::hasScopes($token->scope, $this->scopes)) {
+                        if (!JWKS::hasScopes((string) ($token->scope ?? ''), $this->scopes)) {
                             return Http\Response::json($response,
                                 'Missing required scope(s)',
                                 401
@@ -117,13 +123,14 @@ class AuthJWKS
                         }
                     }
 
-                    // Add the token to the container so the route can access it if needed
+                    // Kept for compatibility. Prefer the request attribute: in FrankenPHP worker mode the container
+                    // outlives the request, so this entry still holds the last token on later requests that carry none.
                     $this->container->set('token', function(ContainerInterface $c) use ($token) {
                         return $token;
                     });
 
-                    // If we got this far, we can let the token through
-                    return $handler->handle($request);
+                    // If we got this far, we can let the token through, carrying its verified claims.
+                    return $handler->handle($request->withAttribute(self::ATTRIBUTE_TOKEN, $token));
                 } catch (Exception $e) {
                     return Http\Response::json($response,
                         $e->getMessage(),

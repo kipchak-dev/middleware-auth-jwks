@@ -14,6 +14,20 @@ Then just ensure you have appropriate settings configured in `kipchak.auth.jwks.
 
 For a sample, please see: https://1x.ax/mamluk/kipchak/starter/~files/master/config/kipchak.auth.jwks.php.
 
+## The verified token
+
+Every request the middleware lets through carries the verified token's claims as the `kipchak.auth.token`
+request attribute (`AuthJWKS::ATTRIBUTE_TOKEN`). Requests on ignored paths do not. The token is also still stored
+in the container under `token` for compatibility; in FrankenPHP worker mode that entry outlives the request, so
+prefer the attribute. Usage Metering and Subashi Pro quotas read it through `kipchak/identity`.
+
+## Tests
+
+```bash
+composer install
+./vendor/bin/phpunit
+```
+
 ## What is a Kipchak Middleware?
 
 Kipchak Middleware is a standard PHP PSR-15 middleware.

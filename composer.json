@@ -18,6 +18,11 @@
             "Kipchak\\Middleware\\Auth\\JWKS\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Kipchak\\Middleware\\Auth\\JWKS\\Tests\\": "tests/"
+        }
+    },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
@@ -26,5 +31,8 @@
         "kipchak/driver-config": "^1",
         "kipchak/driver-logger": "^1",
         "kipchak/driver-filecache": "^1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12"
     }
 }
