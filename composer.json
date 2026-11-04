@@ -34,5 +34,29 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^12"
+    },
+    "extra": {
+        "kipchak": {
+            "type": "middleware",
+            "config": "sample.config.php",
+            "configName": "kipchak.auth.jwks.php",
+            "initialise": "\\Kipchak\\Middleware\\Auth\\JWKS\\JWKS::initialise($app);",
+            "after": [
+                "kipchak/middleware-feature-flags",
+                "kipchak/middleware-idempotency",
+                "kipchak/middleware-metering",
+                "kipchak/middleware-policy",
+                "kipchak/middleware-quotas",
+                "kipchak/middleware-response-cache"
+            ],
+            "before": [
+                "kipchak/middleware-audit",
+                "kipchak/middleware-opentelemetry",
+                "kipchak/middleware-redaction",
+                "kipchak/middleware-subashi",
+                "kipchak/middleware-subashi-pro"
+            ],
+            "docs": "https://kipchak.dev/docs/mw-auth-jwks"
+        }
     }
 }
