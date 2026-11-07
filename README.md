@@ -10,9 +10,58 @@ This Middleware package provides OAuth 2.0 JWT Bearer Token Authentication suppo
 
 Install it via composer: `composer require kipchak/middleware-auth-jwks`.
 
-Then just ensure you have appropriate settings configured in `kipchak.auth.jwks.php` config file in the root of your project.
+Then configure it in `config/kipchak.auth.jwks.php`; `vendor/bin/kipchak add auth-jwks` copies
+[sample.config.php](sample.config.php) there.
 
-For a sample, please see: https://1x.ax/mamluk/kipchak/starter/~files/master/config/kipchak.auth.jwks.php.
+## Configuration
+
+| Key | Required | What it does |
+|---|---|---|
+| `jwksUri` | Yes | The JWKS endpoint of your identity provider. |
+| `issuer` | Yes | The exact `iss` of the tokens you accept. For Keycloak: `https://<host>/realms/<realm>`. |
+| `audience` | Yes | A non-empty list of the client IDs whose tokens this API accepts. |
+| `token_type` | No | When set, the token's `typ` claim must equal it. Set `'Bearer'` for Keycloak. |
+| `validate_scopes`, `scopes` | No | When `validate_scopes` is true, the token must carry **every** scope in `scopes`. |
+| `enabled`, `ignore_options`, `ignore_paths` | No | Apply it globally; let preflight requests and the listed paths through. |
+
+**Audience.** A token is accepted when one of the `audience` entries is in its `aud` claim (a string or a list) or
+equals its `azp` claim. Keycloak puts the client a token was issued to in `azp`; the `aud` of an access token is
+often only `account`. So for Keycloak, list the client IDs of the applications that call this API.
+
+**Token type.** Keycloak signs ID tokens with the same keys as access tokens, and gives them the client in `aud`, so
+the audience check alone accepts them. Its access tokens carry `typ: Bearer` and its ID tokens `typ: ID`, so
+`'token_type' => 'Bearer'` refuses ID tokens. Leave it out only for identity providers that put no `typ` claim in
+the token, such as Entra ID.
+
+**Scopes** passed on a route, `new AuthJWKS($container, ['orders:read'])`, replace the configured ones, and are all
+required too.
+
+The middleware throws a `ConfigurationException` when it is built without `issuer`, `audience` or `jwksUri`, so a
+service with an incomplete configuration fails at boot instead of accepting tokens for other clients.
+
+## Responses and the key set
+
+Every token that fails verification (signature, expiry, issuer, audience, type) gets a 401 with the message
+`Invalid token`; the reason is logged at `info`. A missing token gets a 401 with `No token found`, and a token without
+a required scope a 401 with `Missing required scope(s)`.
+
+The key set is cached for a day. Only a valid key set is cached: when the fetch fails, or the document has no `keys`,
+the request gets a 401, the error is logged, and the next request fetches again. A token whose `kid` the cached set
+does not have causes one new fetch, at most once a minute, so a key rotated at the identity provider is picked up
+straight away.
+
+## Upgrading to 1.41
+
+1.41 fixes a security issue: earlier versions accepted any token the identity provider signed, for any of its
+clients, including ID tokens. It changes three things, and an API keeps working only once its configuration has
+the new keys:
+
+1. **Add `issuer` and `audience`** to `config/kipchak.auth.jwks.php`, and `'token_type' => 'Bearer'` for Keycloak.
+   Without `issuer` and `audience` the middleware throws at boot.
+2. **Every scope in `scopes` is now required**, not any one of them. Before upgrading, check in your identity
+   provider that the tokens of each client in `audience` carry all of them. In Keycloak, a scope such as `email` or
+   `profile` can be an optional client scope, and then a token carries it only when the client asks for it.
+3. **A token that fails verification gets a 401**, not a 400, with a fixed message instead of the library's.
 
 ## The verified token
 

@@ -10,7 +10,16 @@ return [
     ],
     // The JWKS endpoint of your identity provider.
     'jwksUri' => env('JWKS_URI', 'https://idp.example.com/realms/example/protocol/openid-connect/certs'),
+    // Required. The exact iss of the tokens you accept. For Keycloak: https://<host>/realms/<realm>.
+    'issuer' => env('JWKS_ISSUER', 'https://idp.example.com/realms/example'),
+    // Required. The client IDs whose tokens this API accepts, matched against the token's aud or azp claim.
+    // Keycloak access tokens carry the client in azp; their aud is often just "account".
+    'audience' => array_filter(explode(',', env('JWKS_AUDIENCE', 'example-client'))),
+    // Optional. Keycloak sets typ to "Bearer" on access tokens and "ID" on ID tokens, so this refuses ID tokens.
+    // Leave it out for identity providers that put no typ claim in the token, such as Entra ID.
+    'token_type' => 'Bearer',
     'validate_scopes' => true, // check the scopes below unless a route passes its own
+    // A token must carry every one of these scopes.
     'scopes' => [
         'email',
         'profile',

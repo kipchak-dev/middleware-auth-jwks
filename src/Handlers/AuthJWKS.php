@@ -4,6 +4,8 @@ namespace Kipchak\Middleware\Auth\JWKS\Handlers;
 
 use Kipchak\Core\Components\Http;
 use Kipchak\Driver\Filecache\Filecache;
+use Kipchak\Middleware\Auth\JWKS\Exceptions\ConfigurationException;
+use Kipchak\Middleware\Auth\JWKS\Exceptions\KeySetUnavailableException;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -12,7 +14,7 @@ use Kipchak\Middleware\Auth\JWKS\Utils\JWKS;
 use Symfony\Contracts\Cache\ItemInterface;
 use Monolog\Logger as Log;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
-use Exception;
+use Throwable;
 use Kipchak\Driver\Config\Config;
 use Kipchak\Driver\Logger\Logger;
 
@@ -23,6 +25,18 @@ class AuthJWKS
      * Read it with $request->getAttribute(AuthJWKS::ATTRIBUTE_TOKEN). Requests on ignored paths do not carry it.
      */
     public const ATTRIBUTE_TOKEN = 'kipchak.auth.token';
+
+    /**
+     * The only message a client receives when its token fails verification, whatever the reason. The reason is logged.
+     */
+    public const MESSAGE_INVALID_TOKEN = 'Invalid token';
+
+    /**
+     * How long a valid key set is cached, and the shortest interval between two fetches made because a token named a
+     * key the cached set does not have.
+     */
+    private const KEY_SET_TTL = 86400;
+    private const REFETCH_INTERVAL = 60;
 
     public ContainerInterface $container;
 
@@ -38,7 +52,31 @@ class AuthJWKS
         $this->cache = Filecache::get();
         $this->log = Logger::get();
         $this->scopes = $scopes;
+        self::assertConfigured(Config::get('kipchak.auth.jwks') ?? []);
+    }
 
+    /**
+     * Refuses a configuration that would accept tokens issued for another client or by another issuer.
+     *
+     * @throws ConfigurationException
+     */
+    public static function assertConfigured(array $authConfig): void
+    {
+        $missing = [];
+        if (!is_string($authConfig['issuer'] ?? null) || $authConfig['issuer'] === '') {
+            $missing[] = '"issuer" (the exact iss of your identity provider, e.g. https://idp.example.com/realms/example)';
+        }
+        $audience = $authConfig['audience'] ?? null;
+        if (!is_array($audience) || $audience === [] || array_filter($audience, fn ($a) => !is_string($a) || $a === '') !== []) {
+            $missing[] = '"audience" (a non-empty list of the client IDs whose tokens this API accepts)';
+        }
+        if (!is_string($authConfig['jwksUri'] ?? null) || $authConfig['jwksUri'] === '') {
+            $missing[] = '"jwksUri"';
+        }
+        if ($missing !== []) {
+            throw new ConfigurationException('kipchak/middleware-auth-jwks refuses to run without ' . implode(' and ', $missing)
+                . ' in config/kipchak.auth.jwks.php. See https://kipchak.dev/docs/mw-auth-jwks.');
+        }
     }
 
     /**
@@ -61,90 +99,101 @@ class AuthJWKS
             return $handler->handle($request);
         }
 
-
-
-        if (isset($request->getHeader('Authorization')[0])) {
-            $authHeader = $request->getHeader('Authorization')[0];
-            if (!preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
-                // No Bearer token found.
-                return Http\Response::json($response,
-                    'No Bearer token found in the Authorization header',
-                    401
-                );
-            } else {
-                try {
-                    // Bearer token found
-                    $jwt = $matches[1];
-                    // The URI for the JWKS you wish to cache the results from
-                    $jwksUri = $authConfig['jwksUri'];
-
-                    $this->log->debug('Using a cache contract to get the JWKS key...');
-
-                    $jwks = $this->cache->get('jwks', function (ItemInterface $item) use ($jwksUri) {
-                        $item->expiresAfter(86400);
-                        $this->log->debug('Cache miss. Getting JWKS key from the URL');
-                        return json_decode(file_get_contents($jwksUri), true);
-                    });
-
-                    $token = JWKS::decode($jwt, $jwks);
-
-                    // Let's check the expiry time on the token before anything else. If expiry is less than the current unit timestamp, reject the token.
-                    if (isset($token->exp)) {
-                        if ($token->exp < time()) {
-                            return Http\Response::json($response,
-                                'Token has expired',
-                                401
-                            );
-                        }
-                    } else {
-                        return Http\Response::json($response,
-                            'Token does not have a valid expiry timestamp',
-                            401
-                        );
-                    }
-
-                    // If config says validate scopes and no scopes are passed to the MW, use the default ones
-                    if (empty($this->scopes)) {
-                        if ($authConfig['validate_scopes'] ?? false) {
-                            if (!JWKS::hasScopes((string) ($token->scope ?? ''), $authConfig['scopes'] ?? [])) {
-                                return Http\Response::json($response,
-                                    'Missing required scope(s)',
-                                    401
-                                );
-                            }
-                        }
-                    } else {
-                        // Custom scopes have been passed, validate those
-                        if (!JWKS::hasScopes((string) ($token->scope ?? ''), $this->scopes)) {
-                            return Http\Response::json($response,
-                                'Missing required scope(s)',
-                                401
-                            );
-                        }
-                    }
-
-                    // Kept for compatibility. Prefer the request attribute: in FrankenPHP worker mode the container
-                    // outlives the request, so this entry still holds the last token on later requests that carry none.
-                    $this->container->set('token', function(ContainerInterface $c) use ($token) {
-                        return $token;
-                    });
-
-                    // If we got this far, we can let the token through, carrying its verified claims.
-                    return $handler->handle($request->withAttribute(self::ATTRIBUTE_TOKEN, $token));
-                } catch (Exception $e) {
-                    return Http\Response::json($response,
-                        $e->getMessage(),
-                        400
-                    );
-                }
-            }
-        } else {
-            // No Authorization header or JWT auth is disabled in config, so do nothing.
-            return Http\Response::json($response,
-                'No token found',
-                401
-            );
+        if (!isset($request->getHeader('Authorization')[0])) {
+            return Http\Response::json($response, 'No token found', 401);
         }
+        if (!preg_match('/Bearer\s(\S+)/', $request->getHeader('Authorization')[0], $matches)) {
+            return Http\Response::json($response, 'No Bearer token found in the Authorization header', 401);
+        }
+        $jwt = $matches[1];
+
+        try {
+            $token = JWKS::decode($jwt, $this->keySet($authConfig['jwksUri'], JWKS::keyId($jwt)));
+        } catch (KeySetUnavailableException $e) {
+            $this->log->error('JWKS: ' . $e->getMessage());
+
+            return Http\Response::json($response, self::MESSAGE_INVALID_TOKEN, 401);
+        } catch (Throwable $e) {
+            $this->log->info('JWKS: token rejected: ' . $e->getMessage());
+
+            return Http\Response::json($response, self::MESSAGE_INVALID_TOKEN, 401);
+        }
+
+        $problem = JWKS::claimsProblem($token, $authConfig['issuer'], $authConfig['audience'], $authConfig['token_type'] ?? null, time());
+        if ($problem !== null) {
+            $this->log->info('JWKS: token rejected: ' . $problem);
+
+            return Http\Response::json($response, self::MESSAGE_INVALID_TOKEN, 401);
+        }
+
+        // Scopes passed to the middleware on a route take the place of the configured ones.
+        $required = $this->scopes !== [] ? $this->scopes : (($authConfig['validate_scopes'] ?? false) ? ($authConfig['scopes'] ?? []) : []);
+        if ($required !== [] && !JWKS::hasScopes((string) ($token->scope ?? ''), $required)) {
+            return Http\Response::json($response, 'Missing required scope(s)', 401);
+        }
+
+        // Kept for compatibility. Prefer the request attribute: in FrankenPHP worker mode the container
+        // outlives the request, so this entry still holds the last token on later requests that carry none.
+        $this->container->set('token', function (ContainerInterface $c) use ($token) {
+            return $token;
+        });
+
+        // If we got this far, we can let the token through, carrying its verified claims.
+        return $handler->handle($request->withAttribute(self::ATTRIBUTE_TOKEN, $token));
     }
 
+    /**
+     * The key set, from the cache when it holds one. Only a valid key set is cached: a failed fetch caches nothing, so
+     * the next request tries again. A token whose kid the cached set does not have causes one new fetch, at most every
+     * REFETCH_INTERVAL seconds, so that a key rotated at the identity provider is picked up without waiting a day.
+     *
+     * @throws KeySetUnavailableException
+     */
+    private function keySet(string $jwksUri, ?string $kid): array
+    {
+        $cacheKey = 'jwks.' . sha1($jwksUri);
+        $fetch = function (ItemInterface $item) use ($jwksUri): array {
+            $item->expiresAfter(self::KEY_SET_TTL);
+            $this->log->debug('JWKS: cache miss, fetching the key set');
+
+            return self::fetch($jwksUri); // Throws on failure, and the cache then stores nothing.
+        };
+
+        $keySet = $this->cache->get($cacheKey, $fetch);
+        if ($kid === null || JWKS::hasKeyId($keySet, $kid)) {
+            return $keySet;
+        }
+
+        $refetch = $this->cache->getItem($cacheKey . '.refetched');
+        if ($refetch->isHit()) {
+            return $keySet; // Fetched again recently: the kid is unknown, and the decode will reject the token.
+        }
+        $refetch->set(time())->expiresAfter(self::REFETCH_INTERVAL);
+        $this->cache->save($refetch);
+
+        $this->log->info('JWKS: unknown kid, fetching the key set again');
+        $fresh = self::fetch($jwksUri);
+        $item = $this->cache->getItem($cacheKey);
+        $this->cache->save($item->set($fresh)->expiresAfter(self::KEY_SET_TTL));
+
+        return $fresh;
+    }
+
+    /**
+     * @throws KeySetUnavailableException
+     */
+    private static function fetch(string $jwksUri): array
+    {
+        $context = stream_context_create(['http' => ['timeout' => 5, 'ignore_errors' => false]]);
+        $body = @file_get_contents($jwksUri, false, $context);
+        if ($body === false) {
+            throw new KeySetUnavailableException('could not fetch the key set from ' . $jwksUri);
+        }
+        $keySet = json_decode($body, true);
+        if (!is_array($keySet) || !isset($keySet['keys']) || !is_array($keySet['keys']) || $keySet['keys'] === []) {
+            throw new KeySetUnavailableException('the document at ' . $jwksUri . ' is not a key set with a non-empty "keys" array');
+        }
+
+        return $keySet;
+    }
 }
