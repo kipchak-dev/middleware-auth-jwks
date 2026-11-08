@@ -32,11 +32,13 @@ class AuthJWKS
     public const MESSAGE_INVALID_TOKEN = 'Invalid token';
 
     /**
-     * How long a valid key set is cached, and the shortest interval between two fetches made because a token named a
-     * key the cached set does not have.
+     * How long a valid key set is cached unless key_set_ttl says otherwise, and the shortest interval between two
+     * fetches made because a token named a key the cached set does not have.
      */
-    private const KEY_SET_TTL = 86400;
+    public const DEFAULT_KEY_SET_TTL = 86400;
     private const REFETCH_INTERVAL = 60;
+
+    private int $keySetTtl;
 
     public ContainerInterface $container;
 
@@ -52,7 +54,9 @@ class AuthJWKS
         $this->cache = Filecache::get();
         $this->log = Logger::get();
         $this->scopes = $scopes;
-        self::assertConfigured(Config::get('kipchak.auth.jwks') ?? []);
+        $authConfig = Config::get('kipchak.auth.jwks') ?? [];
+        self::assertConfigured($authConfig);
+        $this->keySetTtl = $authConfig['key_set_ttl'] ?? self::DEFAULT_KEY_SET_TTL;
     }
 
     /**
@@ -72,6 +76,9 @@ class AuthJWKS
         }
         if (!is_string($authConfig['jwksUri'] ?? null) || $authConfig['jwksUri'] === '') {
             $missing[] = '"jwksUri"';
+        }
+        if (array_key_exists('key_set_ttl', $authConfig) && (!is_int($authConfig['key_set_ttl']) || $authConfig['key_set_ttl'] < 1)) {
+            $missing[] = 'a valid "key_set_ttl" (a whole number of seconds, at least 1; omit it for 86400)';
         }
         if ($missing !== []) {
             throw new ConfigurationException('kipchak/middleware-auth-jwks refuses to run without ' . implode(' and ', $missing)
@@ -100,10 +107,10 @@ class AuthJWKS
         }
 
         if (!isset($request->getHeader('Authorization')[0])) {
-            return Http\Response::json($response, 'No token found', 401);
+            return Http\Response::error($response, 'No token found', 401);
         }
         if (!preg_match('/Bearer\s(\S+)/', $request->getHeader('Authorization')[0], $matches)) {
-            return Http\Response::json($response, 'No Bearer token found in the Authorization header', 401);
+            return Http\Response::error($response, 'No Bearer token found in the Authorization header', 401);
         }
         $jwt = $matches[1];
 
@@ -112,24 +119,25 @@ class AuthJWKS
         } catch (KeySetUnavailableException $e) {
             $this->log->error('JWKS: ' . $e->getMessage());
 
-            return Http\Response::json($response, self::MESSAGE_INVALID_TOKEN, 401);
+            return Http\Response::error($response, self::MESSAGE_INVALID_TOKEN, 401);
         } catch (Throwable $e) {
             $this->log->info('JWKS: token rejected: ' . $e->getMessage());
 
-            return Http\Response::json($response, self::MESSAGE_INVALID_TOKEN, 401);
+            return Http\Response::error($response, self::MESSAGE_INVALID_TOKEN, 401);
         }
 
         $problem = JWKS::claimsProblem($token, $authConfig['issuer'], $authConfig['audience'], $authConfig['token_type'] ?? null, time());
         if ($problem !== null) {
             $this->log->info('JWKS: token rejected: ' . $problem);
 
-            return Http\Response::json($response, self::MESSAGE_INVALID_TOKEN, 401);
+            return Http\Response::error($response, self::MESSAGE_INVALID_TOKEN, 401);
         }
 
         // Scopes passed to the middleware on a route take the place of the configured ones.
         $required = $this->scopes !== [] ? $this->scopes : (($authConfig['validate_scopes'] ?? false) ? ($authConfig['scopes'] ?? []) : []);
         if ($required !== [] && !JWKS::hasScopes((string) ($token->scope ?? ''), $required)) {
-            return Http\Response::json($response, 'Missing required scope(s)', 401);
+            // The token is valid but does not allow this request: 403, insufficient scope (RFC 6750 §3.1).
+            return Http\Response::error($response, 'Missing required scope(s)', 403);
         }
 
         // Kept for compatibility. Prefer the request attribute: in FrankenPHP worker mode the container
@@ -151,9 +159,11 @@ class AuthJWKS
      */
     private function keySet(string $jwksUri, ?string $kid): array
     {
-        $cacheKey = 'jwks.' . sha1($jwksUri);
+        // The lifetime is part of the key, so that lowering key_set_ttl takes effect at once rather than once an entry
+        // cached under the old lifetime expires.
+        $cacheKey = 'jwks.' . sha1($jwksUri) . '.' . $this->keySetTtl;
         $fetch = function (ItemInterface $item) use ($jwksUri): array {
-            $item->expiresAfter(self::KEY_SET_TTL);
+            $item->expiresAfter($this->keySetTtl);
             $this->log->debug('JWKS: cache miss, fetching the key set');
 
             return self::fetch($jwksUri); // Throws on failure, and the cache then stores nothing.
@@ -174,7 +184,7 @@ class AuthJWKS
         $this->log->info('JWKS: unknown kid, fetching the key set again');
         $fresh = self::fetch($jwksUri);
         $item = $this->cache->getItem($cacheKey);
-        $this->cache->save($item->set($fresh)->expiresAfter(self::KEY_SET_TTL));
+        $this->cache->save($item->set($fresh)->expiresAfter($this->keySetTtl));
 
         return $fresh;
     }

@@ -10,6 +10,9 @@ return [
     ],
     // The JWKS endpoint of your identity provider.
     'jwksUri' => env('JWKS_URI', 'https://idp.example.com/realms/example/protocol/openid-connect/certs'),
+    // Optional. Seconds a fetched key set is trusted before it is fetched again; 86400 when left out. 3600 or less
+    // means a key the identity provider withdraws stops being accepted within the hour (SR-2026-013).
+    'key_set_ttl' => 3600,
     // Required. The exact iss of the tokens you accept. For Keycloak: https://<host>/realms/<realm>.
     'issuer' => env('JWKS_ISSUER', 'https://idp.example.com/realms/example'),
     // Required. The client IDs whose tokens this API accepts, matched against the token's aud or azp claim.

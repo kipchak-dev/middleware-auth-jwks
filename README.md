@@ -22,6 +22,7 @@ Then configure it in `config/kipchak.auth.jwks.php`; `vendor/bin/kipchak add aut
 | `audience` | Yes | A non-empty list of the client IDs whose tokens this API accepts. |
 | `token_type` | No | When set, the token's `typ` claim must equal it. Set `'Bearer'` for Keycloak. |
 | `validate_scopes`, `scopes` | No | When `validate_scopes` is true, the token must carry **every** scope in `scopes`. |
+| `key_set_ttl` | No | Seconds a fetched key set is trusted before it is fetched again; default 86400. SR-2026-013 requires 3600 or less, so that a key the identity provider withdraws stops being accepted within the hour. A value that is not a whole number of seconds, at least 1, fails at boot. |
 | `enabled`, `ignore_options`, `ignore_paths` | No | Apply it globally; let preflight requests and the listed paths through. |
 
 **Audience.** A token is accepted when one of the `audience` entries is in its `aud` claim (a string or a list) or
@@ -41,14 +42,26 @@ service with an incomplete configuration fails at boot instead of accepting toke
 
 ## Responses and the key set
 
-Every token that fails verification (signature, expiry, issuer, audience, type) gets a 401 with the message
-`Invalid token`; the reason is logged at `info`. A missing token gets a 401 with `No token found`, and a token without
-a required scope a 401 with `Missing required scope(s)`.
+Refusals use the same statuses as kipchak/middleware-error, from kipchak/core's `ErrorStatus`, so an API gives one
+name for each refusal however it arises. Every token that fails verification (signature, expiry, issuer, audience,
+type) gets a 401 `UNAUTHENTICATED` with the message `Invalid token`; the reason is logged at `info`. A missing token
+gets a 401 `UNAUTHENTICATED` with `No token found`. A valid token without a required scope gets a 403
+`INSUFFICIENT_PRIVILEGES` with `Missing required scope(s)`: the caller is known but not allowed (RFC 6750, section 3.1).
 
-The key set is cached for a day. Only a valid key set is cached: when the fetch fails, or the document has no `keys`,
+The key set is cached for `key_set_ttl` seconds, a day by default. The lifetime is part of the cache key, so lowering it
+takes effect on the next request rather than when the entry cached under the old lifetime expires. Only a valid key set is cached: when the fetch fails, or the document has no `keys`,
 the request gets a 401, the error is logged, and the next request fetches again. A token whose `kid` the cached set
 does not have causes one new fetch, at most once a minute, so a key rotated at the identity provider is picked up
 straight away.
+
+## Upgrading to 1.42
+
+1.42 requires kipchak/core 3.18 and changes what a client receives, not the configuration:
+
+1. **The status of a 401 is `UNAUTHENTICATED`**, not `UNAUTHORIZED`, as kipchak/middleware-error already writes it.
+2. **A valid token without a required scope gets 403 `INSUFFICIENT_PRIVILEGES`**, not 401. A client that treats every
+   401 as "sign in again" now shows a refusal for that case instead.
+3. **`key_set_ttl`** is new and optional. Set it to 3600 or less to meet SR-2026-013.
 
 ## Upgrading to 1.41
 

@@ -151,7 +151,7 @@ final class AuthJWKSTest extends TestCase
         $this->assertSame(401, $this->call()->getStatusCode());
         $this->assertSame(401, $this->call(token: $this->token(['exp' => time() - 3600]))->getStatusCode());
         $this->assertSame(401, $this->call(token: $this->token(kid: 'unknown-key'))->getStatusCode());
-        $this->assertSame(401, $this->call(token: $this->token(['scope' => 'openid']))->getStatusCode());
+        $this->assertSame(403, $this->call(token: $this->token(['scope' => 'openid']))->getStatusCode(), 'valid, but without the required scope');
         $this->assertNull($this->received);
     }
 
@@ -160,7 +160,8 @@ final class AuthJWKSTest extends TestCase
         $token = FirebaseJWT::encode(['iss' => self::ISSUER, 'azp' => 'web-app', 'typ' => 'Bearer', 'sub' => 'u', 'exp' => time() + 300],
             $this->privateKeys['test-key'], 'RS256', 'test-key');
 
-        $this->assertSame(401, $this->call(token: $token)->getStatusCode());
+        // A valid token with no scope claim has none of the required scopes: refused with 403, not a 500.
+        $this->assertSame(403, $this->call(token: $token)->getStatusCode());
     }
 
     public function testATokenForAnotherClientIsRejected(): void
@@ -199,11 +200,11 @@ final class AuthJWKSTest extends TestCase
     public function testEveryRequiredScopeMustBePresent(): void
     {
         $this->configure(['scopes' => ['email', 'profile']]);
-        $this->assertSame(401, $this->call(token: $this->token(['scope' => 'openid email']))->getStatusCode());
+        $this->assertSame(403, $this->call(token: $this->token(['scope' => 'openid email']))->getStatusCode());
         $this->assertSame(200, $this->call(token: $this->token(['scope' => 'openid email profile']))->getStatusCode());
 
         // Scopes passed on a route replace the configured ones and are all required too.
-        $this->assertSame(401, $this->call(token: $this->token(['scope' => 'email profile']), scopes: ['orders:read', 'email'])->getStatusCode());
+        $this->assertSame(403, $this->call(token: $this->token(['scope' => 'email profile']), scopes: ['orders:read', 'email'])->getStatusCode());
         $this->assertSame(200, $this->call(token: $this->token(['scope' => 'orders:read email']), scopes: ['orders:read', 'email'])->getStatusCode());
     }
 
@@ -221,6 +222,73 @@ final class AuthJWKSTest extends TestCase
         $this->assertSame(401, $response->getStatusCode());
         $this->assertSame(AuthJWKS::MESSAGE_INVALID_TOKEN, $this->body($response)['data']);
         $this->assertNull($this->received);
+    }
+
+    public function testRefusalsCarryTheStatusesMiddlewareErrorUses(): void
+    {
+        $missing = $this->body($this->call());
+        $this->assertSame([401, 'UNAUTHENTICATED'], [$missing['code'], $missing['status']]);
+
+        $invalid = $this->body($this->call(token: $this->token(['exp' => time() - 3600])));
+        $this->assertSame([401, 'UNAUTHENTICATED', AuthJWKS::MESSAGE_INVALID_TOKEN], [$invalid['code'], $invalid['status'], $invalid['data']]);
+
+        $scope = $this->body($this->call(token: $this->token(['scope' => 'openid'])));
+        $this->assertSame([403, 'INSUFFICIENT_PRIVILEGES'], [$scope['code'], $scope['status']]);
+
+        // Control: the label 1.41 and earlier wrote, through Response::json(), which this release no longer uses.
+        $this->assertSame('UNAUTHORIZED', json_decode((string) \Kipchak\Core\Components\Http\Response::json(new \Slim\Psr7\Response(), '', 401)->getBody(), true)['status']);
+    }
+
+    public function testAShorterKeySetTtlFetchesTheSetAgainOnceItExpires(): void
+    {
+        $this->configure(['key_set_ttl' => 1]);
+        $token = $this->token();
+        $this->assertSame(200, $this->call(token: $token)->getStatusCode()); // caches the set with test-key
+
+        // The identity provider withdraws test-key.
+        $this->publishKeys('other-key');
+        $this->assertSame(200, $this->call(token: $token)->getStatusCode(), 'Within the TTL the cached set still holds it');
+
+        sleep(2);
+        $this->assertSame(401, $this->call(token: $token)->getStatusCode(), 'After the TTL the set is fetched again, without it');
+    }
+
+    public function testControlTheDefaultTtlKeepsTheSetBeyondThatTime(): void
+    {
+        $token = $this->token();
+        $this->assertSame(200, $this->call(token: $token)->getStatusCode());
+
+        $this->publishKeys('other-key');
+        sleep(2);
+        $this->assertSame(200, $this->call(token: $token)->getStatusCode());
+    }
+
+    public function testChangingTheTtlDoesNotKeepASetCachedUnderTheOldOne(): void
+    {
+        $token = $this->token();
+        $this->assertSame(200, $this->call(token: $token)->getStatusCode()); // cached for the default 86400 seconds
+        $this->publishKeys('other-key');
+
+        $this->assertSame(200, $this->call(token: $token)->getStatusCode(), 'Control: the same TTL reads the cached set');
+
+        $this->configure(['key_set_ttl' => 3600]);
+        $this->assertSame(401, $this->call(token: $token)->getStatusCode(), 'A new TTL fetches the set at once');
+    }
+
+    public function testAnInvalidKeySetTtlFailsAtBoot(): void
+    {
+        foreach ([0, -60, '3600', 3600.5, null] as $invalid) {
+            $this->configure(['key_set_ttl' => $invalid]);
+            try {
+                new AuthJWKS($this->container);
+                $this->fail('The middleware was built with key_set_ttl ' . var_export($invalid, true) . '.');
+            } catch (ConfigurationException $e) {
+                $this->assertStringContainsString('"key_set_ttl"', $e->getMessage());
+            }
+        }
+
+        $this->configure(['key_set_ttl' => 3600]);
+        $this->assertInstanceOf(AuthJWKS::class, new AuthJWKS($this->container));
     }
 
     public function testAFailedFetchIsNotCached(): void
