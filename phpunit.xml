@@ -4,5 +4,9 @@
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
         </testsuite>
+        <!-- Against a real proxy, in Docker: bash tests/Proxy/run.sh. Skipped without it. -->
+        <testsuite name="Proxy">
+            <directory>tests/Proxy</directory>
+        </testsuite>
     </testsuites>
 </phpunit>

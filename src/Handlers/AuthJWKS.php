@@ -11,6 +11,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Response;
 use Kipchak\Middleware\Auth\JWKS\Utils\JWKS;
+use Kipchak\Middleware\Auth\JWKS\Utils\Proxy;
 use Symfony\Contracts\Cache\ItemInterface;
 use Monolog\Logger as Log;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
@@ -48,6 +49,8 @@ class AuthJWKS
 
     private array $scopes;
 
+    private ?Proxy $proxy;
+
     public function __construct(ContainerInterface $container, array $scopes = [])
     {
         $this->container = $container;
@@ -57,6 +60,7 @@ class AuthJWKS
         $authConfig = Config::get('kipchak.auth.jwks') ?? [];
         self::assertConfigured($authConfig);
         $this->keySetTtl = $authConfig['key_set_ttl'] ?? self::DEFAULT_KEY_SET_TTL;
+        $this->proxy = Proxy::fromConfig($authConfig);
     }
 
     /**
@@ -166,7 +170,7 @@ class AuthJWKS
             $item->expiresAfter($this->keySetTtl);
             $this->log->debug('JWKS: cache miss, fetching the key set');
 
-            return self::fetch($jwksUri); // Throws on failure, and the cache then stores nothing.
+            return $this->fetch($jwksUri); // Throws on failure, and the cache then stores nothing.
         };
 
         $keySet = $this->cache->get($cacheKey, $fetch);
@@ -182,7 +186,7 @@ class AuthJWKS
         $this->cache->save($refetch);
 
         $this->log->info('JWKS: unknown kid, fetching the key set again');
-        $fresh = self::fetch($jwksUri);
+        $fresh = $this->fetch($jwksUri);
         $item = $this->cache->getItem($cacheKey);
         $this->cache->save($item->set($fresh)->expiresAfter($this->keySetTtl));
 
@@ -192,12 +196,17 @@ class AuthJWKS
     /**
      * @throws KeySetUnavailableException
      */
-    private static function fetch(string $jwksUri): array
+    private function fetch(string $jwksUri): array
     {
-        $context = stream_context_create(['http' => ['timeout' => 5, 'ignore_errors' => false]]);
-        $body = @file_get_contents($jwksUri, false, $context);
+        $http = ['timeout' => 5, 'ignore_errors' => false];
+        $through = '';
+        if ($this->proxy !== null && !$this->proxy->bypasses($jwksUri)) {
+            $http += $this->proxy->httpOptions($jwksUri);
+            $through = ' through the proxy ' . $this->proxy->describe();
+        }
+        $body = @file_get_contents($jwksUri, false, stream_context_create(['http' => $http]));
         if ($body === false) {
-            throw new KeySetUnavailableException('could not fetch the key set from ' . $jwksUri);
+            throw new KeySetUnavailableException('could not fetch the key set from ' . $jwksUri . $through);
         }
         $keySet = json_decode($body, true);
         if (!is_array($keySet) || !isset($keySet['keys']) || !is_array($keySet['keys']) || $keySet['keys'] === []) {

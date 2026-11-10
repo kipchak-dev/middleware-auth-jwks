@@ -24,6 +24,7 @@ Then configure it in `config/kipchak.auth.jwks.php`; `vendor/bin/kipchak add aut
 | `validate_scopes`, `scopes` | No | When `validate_scopes` is true, the token must carry **every** scope in `scopes`. |
 | `key_set_ttl` | No | Seconds a fetched key set is trusted before it is fetched again; default 86400. SR-2026-013 requires 3600 or less, so that a key the identity provider withdraws stops being accepted within the hour. A value that is not a whole number of seconds, at least 1, fails at boot. |
 | `enabled`, `ignore_options`, `ignore_paths` | No | Apply it globally; let preflight requests and the listed paths through. |
+| `proxy` | No | The outbound proxy the key set is fetched through: `url`, `username`, `password`, `no_proxy`. See [Outbound proxy](#outbound-proxy). |
 
 **Audience.** A token is accepted when one of the `audience` entries is in its `aud` claim (a string or a list) or
 equals its `azp` claim. Keycloak puts the client a token was issued to in `azp`; the `aud` of an access token is
@@ -53,6 +54,36 @@ takes effect on the next request rather than when the entry cached under the old
 the request gets a 401, the error is logged, and the next request fetches again. A token whose `kid` the cached set
 does not have causes one new fetch, at most once a minute, so a key rotated at the identity provider is picked up
 straight away.
+
+## Outbound proxy
+
+When the API reaches the identity provider only through an outbound HTTP proxy, set the `proxy` block. The sample
+configuration reads it from the environment:
+
+```php
+'proxy' => [
+    'url' => env('JWKS_PROXY', env('HTTPS_PROXY', env('https_proxy', ''))), // http://host:port
+    'username' => env('JWKS_PROXY_USERNAME', ''),
+    'password' => env('JWKS_PROXY_PASSWORD', ''),
+    'no_proxy' => env('NO_PROXY', env('no_proxy', '')), // comma-separated hosts fetched directly
+],
+```
+
+- An `https://` `jwksUri` is fetched through a `CONNECT` tunnel, so TLS runs end to end with the identity provider
+  and its certificate is checked as before. An `http://` one is sent to the proxy as a full URI.
+- The proxy URL must be `http://host:port`: PHP speaks plain HTTP to the proxy. Another scheme, such as `https://` or
+  `socks5://`, fails at boot with a `ConfigurationException`.
+- Basic credentials come from the URL (`http://user:password@host:port`, percent-encoded) or from `username` and
+  `password`, which take precedence. They are sent to the proxy only, as `Proxy-Authorization`, and never logged: a
+  failed fetch logs the proxy by host and port.
+- `no_proxy` is a comma-separated list, or an array. `example.com` and `.example.com` match that host and its
+  subdomains, `*` matches every host, and a port on an entry is ignored.
+- An empty `url`, or no `proxy` block, fetches directly, as before.
+
+## Upgrading to 1.43
+
+1.43 adds the optional `proxy` block. Nothing changes for an API that does not set it: copy the block from
+`sample.config.php` into `config/kipchak.auth.jwks.php` to use a proxy.
 
 ## Upgrading to 1.42
 
@@ -89,6 +120,15 @@ prefer the attribute. Usage Metering and Subashi Pro quotas read it through `kip
 composer install
 ./vendor/bin/phpunit
 ```
+
+The `Proxy` suite fetches the key set through a real proxy, and is skipped without one. To run it, with Docker:
+
+```bash
+bash tests/Proxy/run.sh
+```
+
+It starts an identity provider that resolves only inside a Docker network, an open tinyproxy and one that requires
+credentials, runs the suite, and removes them.
 
 ## What is a Kipchak Middleware?
 
