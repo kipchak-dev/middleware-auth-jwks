@@ -241,7 +241,9 @@ final class AuthJWKSTest extends TestCase
 
     public function testAShorterKeySetTtlFetchesTheSetAgainOnceItExpires(): void
     {
-        $this->configure(['key_set_ttl' => 1]);
+        // The file cache stores expiry in whole seconds (time() + TTL), so an entry lives between TTL - 1 and TTL
+        // seconds. A TTL of 2 keeps the set for at least a second, well past the next call; 3 seconds is past any expiry.
+        $this->configure(['key_set_ttl' => 2]);
         $token = $this->token();
         $this->assertSame(200, $this->call(token: $token)->getStatusCode()); // caches the set with test-key
 
@@ -249,7 +251,7 @@ final class AuthJWKSTest extends TestCase
         $this->publishKeys('other-key');
         $this->assertSame(200, $this->call(token: $token)->getStatusCode(), 'Within the TTL the cached set still holds it');
 
-        sleep(2);
+        sleep(3);
         $this->assertSame(401, $this->call(token: $token)->getStatusCode(), 'After the TTL the set is fetched again, without it');
     }
 
@@ -259,7 +261,7 @@ final class AuthJWKSTest extends TestCase
         $this->assertSame(200, $this->call(token: $token)->getStatusCode());
 
         $this->publishKeys('other-key');
-        sleep(2);
+        sleep(3);
         $this->assertSame(200, $this->call(token: $token)->getStatusCode());
     }
 
