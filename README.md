@@ -80,6 +80,21 @@ configuration reads it from the environment:
   subdomains, `*` matches every host, and a port on an entry is ignored.
 - An empty `url`, or no `proxy` block, fetches directly, as before.
 
+## Optional sign-in
+
+`new AuthJWKS($container, $scopes, optional: true)` lets a request with no `Authorization` header through as
+anonymous, without the token attribute. A request with the header is verified exactly as without the option: an
+invalid, expired or malformed token, an empty header and another scheme are refused with 401, and are never treated
+as anonymous. Off by default (1.45).
+
+## Upgrading to 1.45
+
+1.45 fixes a defect in worker mode: the container entry `token` kept the last verified token for the life of the
+worker, so a request that carried no token, took an ignored path or was refused could read the previous caller's
+token from it. The entry is now emptied at the start of every request; the request attribute was never affected. An
+API that reads the entry only behind this middleware sees no change. 1.45 also adds optional sign-in, which changes
+nothing unless a route passes it.
+
 ## Upgrading to 1.43
 
 1.43 adds the optional `proxy` block. Nothing changes for an API that does not set it: copy the block from
@@ -111,7 +126,7 @@ the new keys:
 
 Every request the middleware lets through carries the verified token's claims as the `kipchak.auth.token`
 request attribute (`AuthJWKS::ATTRIBUTE_TOKEN`). Requests on ignored paths do not. The token is also still stored
-in the container under `token` for compatibility; in FrankenPHP worker mode that entry outlives the request, so
+in the container under `token` for compatibility; the entry is emptied at the start of every request (1.45), but
 prefer the attribute. Usage Metering and Subashi Pro quotas read it through `kipchak/identity`.
 
 ## Tests
