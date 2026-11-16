@@ -373,4 +373,124 @@ final class AuthJWKSTest extends TestCase
             }
         }
     }
+
+    /**
+     * Calls one middleware instance, as a route does in FrankenPHP worker mode: the instance and the container outlive
+     * the request.
+     *
+     * @param array<string, string> $headers
+     */
+    private function through(AuthJWKS $middleware, array $headers = [], string $path = '/v1/things', string $method = 'GET', ?ServerRequestInterface $request = null): ResponseInterface
+    {
+        $request ??= (new ServerRequestFactory())->createServerRequest($method, $path);
+        foreach ($headers as $name => $value) {
+            $request = $request->withHeader($name, $value);
+        }
+        $this->received = null;
+        $test = $this;
+
+        return $middleware($request, new class ($test) implements RequestHandlerInterface {
+            public function __construct(private AuthJWKSTest $test)
+            {
+            }
+
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                $this->test->received = $request;
+
+                return (new ResponseFactory())->createResponse(200);
+            }
+        });
+    }
+
+    /**
+     * T15 (1.45): the container entry 'token' is emptied at the start of every request, so a request that carries no
+     * token, takes an ignored path or is refused cannot read the previous request's token. Run against PHP-DI, the
+     * container Kipchak uses, because it keeps a resolved entry until the entry is set again.
+     */
+    public function testTheContainerEntryNeverOutlivesItsRequest(): void
+    {
+        $container = new \DI\Container();
+        foreach ($this->container->entries as $id => $value) {
+            $container->set($id, $value);
+        }
+        foreach ([Config::class, Logger::class, Filecache::class] as $driver) {
+            (new \ReflectionProperty($driver, 'container'))->setValue(null, $container);
+        }
+        $middleware = new AuthJWKS($container);
+
+        $this->assertSame(200, $this->through($middleware, ['Authorization' => 'Bearer ' . $this->token(['sub' => 'first-caller'])])->getStatusCode());
+        $this->assertSame('first-caller', $container->get('token')->sub, 'The entry is set for the request that carried the token');
+
+        $this->through($middleware, [], '/status');
+        $this->assertNull($container->get('token'), 'An ignored path does not see the previous token');
+
+        $this->through($middleware, ['Authorization' => 'Bearer ' . $this->token(['sub' => 'second-caller'])]);
+        $this->through($middleware, [], '/v1/things', 'OPTIONS');
+        $this->assertNull($container->get('token'), 'An ignored OPTIONS request does not see the previous token');
+
+        $this->through($middleware, ['Authorization' => 'Bearer ' . $this->token(['sub' => 'third-caller'])]);
+        $this->assertSame(401, $this->through($middleware, ['Authorization' => 'Bearer ' . $this->token(['exp' => time() - 60])])->getStatusCode());
+        $this->assertNull($container->get('token'), 'A refused request does not see the previous token');
+
+        $this->through($middleware, ['Authorization' => 'Bearer ' . $this->token(['sub' => 'fourth-caller'])]);
+        $this->through(new AuthJWKS($container, [], optional: true));
+        $this->assertNull($container->get('token'), 'An anonymous request in optional mode does not see the previous token');
+    }
+
+    /** T4, the middleware part (1.45): optional mode lets a request with no Authorization header through as anonymous. */
+    public function testOptionalModeLetsARequestWithoutAHeaderThroughAsAnonymous(): void
+    {
+        $optional = new AuthJWKS($this->container, [], optional: true);
+
+        $this->assertSame(200, $this->through($optional)->getStatusCode());
+        $this->assertNull($this->received->getAttribute(AuthJWKS::ATTRIBUTE_TOKEN));
+
+        // An attribute something earlier put on the request is removed: only a verified token sets it.
+        $carried = (new ServerRequestFactory())->createServerRequest('GET', '/v1/things')->withAttribute(AuthJWKS::ATTRIBUTE_TOKEN, (object) ['sub' => 'forged']);
+        $this->through($optional, request: $carried);
+        $this->assertNull($this->received->getAttribute(AuthJWKS::ATTRIBUTE_TOKEN));
+    }
+
+    public function testOptionalModeVerifiesAValidTokenAsUsual(): void
+    {
+        $optional = new AuthJWKS($this->container, [], optional: true);
+
+        $this->assertSame(200, $this->through($optional, ['Authorization' => 'Bearer ' . $this->token(['sub' => 'user-7'])])->getStatusCode());
+        $this->assertSame('user-7', $this->received->getAttribute(AuthJWKS::ATTRIBUTE_TOKEN)->sub);
+    }
+
+    /** X2: optional mode never treats a token that was sent but failed as anonymous. */
+    public function testOptionalModeNeverDowngradesAnInvalidToken(): void
+    {
+        $optional = new AuthJWKS($this->container, [], optional: true);
+        $valid = $this->token();
+        $parts = explode('.', $valid);
+        $refused = [
+            'expired' => 'Bearer ' . $this->token(['exp' => time() - 60]),
+            'signed by an unknown key' => 'Bearer ' . $this->token(kid: 'unknown-key'),
+            'another issuer' => 'Bearer ' . $this->token(['iss' => 'https://other.example.com/realms/x']),
+            'another client' => 'Bearer ' . $this->token(['azp' => 'other-app']),
+            'an ID token' => 'Bearer ' . $this->token(['typ' => 'ID']),
+            'a broken signature' => 'Bearer ' . $parts[0] . '.' . $parts[1] . '.' . strrev($parts[2]),
+            'malformed' => 'Bearer not-a-jwt',
+            'Bearer alone' => 'Bearer',
+            'empty' => '',
+            'another scheme' => 'Basic ' . base64_encode('user:password'),
+        ];
+        foreach ($refused as $case => $header) {
+            $this->assertSame(401, $this->through($optional, ['Authorization' => $header])->getStatusCode(), "{$case} must be refused, not treated as anonymous");
+            $this->assertNull($this->received, "{$case} must not reach the route");
+        }
+
+        $scoped = new AuthJWKS($this->container, ['admin'], optional: true);
+        $this->assertSame(403, $this->through($scoped, ['Authorization' => "Bearer {$valid}"])->getStatusCode(), 'A valid token without the scope is still refused');
+        $this->assertNull($this->received);
+    }
+
+    public function testOptionalModeIsOffByDefault(): void
+    {
+        $this->assertSame(401, $this->through(new AuthJWKS($this->container))->getStatusCode());
+        $this->assertNull($this->received);
+    }
 }

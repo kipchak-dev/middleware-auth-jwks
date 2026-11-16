@@ -51,8 +51,17 @@ class AuthJWKS
 
     private ?Proxy $proxy;
 
-    public function __construct(ContainerInterface $container, array $scopes = [])
+    /**
+     * With $optional, a request that carries no Authorization header at all goes through as anonymous: without the
+     * token attribute, and with the container entry 'token' empty. Any request that does carry the header is
+     * verified exactly as without it, so an invalid, expired or malformed token is still refused with 401 and never
+     * treated as anonymous.
+     */
+    private bool $optional;
+
+    public function __construct(ContainerInterface $container, array $scopes = [], bool $optional = false)
     {
+        $this->optional = $optional;
         $this->container = $container;
         $this->cache = Filecache::get();
         $this->log = Logger::get();
@@ -103,11 +112,19 @@ class AuthJWKS
         $authConfig = Config::get('kipchak.auth.jwks');
         $response = new Response();
 
+        // In FrankenPHP worker mode the container outlives the request. Empty the entry first, so that no request,
+        // whatever path it takes below, can read the token of an earlier one.
+        $this->container->set('token', static fn (): mixed => null);
+
         if (
             (isset($authConfig['ignore_options']) && $request->getMethod() === 'OPTIONS' && $authConfig['ignore_options']) ||
             (isset($authConfig['ignore_paths']) && in_array($request->getUri()->getPath(), $authConfig['ignore_paths']))
         ) {
             return $handler->handle($request);
+        }
+
+        if ($this->optional && !$request->hasHeader('Authorization')) {
+            return $handler->handle($request->withoutAttribute(self::ATTRIBUTE_TOKEN));
         }
 
         if (!isset($request->getHeader('Authorization')[0])) {
